@@ -1,24 +1,38 @@
 #!/bin/bash
+
 source ./messages.sh
-# Fixed file name
-file_name="task1"
 
-# Check if the file exists and is readable
-if [ ! -f "$file_name" ]; then
-    echo "Error: File '$file_name' does not exist."
-    exit 1
+# one command line arg
+if [ $# -ne 1 ]; then
+	echo "Usage: $0 <elf_file>"       
+	exit 1
 fi
 
-# Check if the file is an ELF file
-if ! file "$file_name" | grep -q "ELF"; then
-    echo "Error: File '$file_name' is not a valid ELF file."
-    exit 1
+# arg is a file
+if [ ! -f "$1" ]; then
+	echo "error not a file"
+	exit 1
 fi
 
-# Extract ELF header information using readelf
-magic_number=$(readelf -h "$file_name" | grep "Magic:" | awk '{$1=""; print $0}')
-class=$(readelf -h "$file_name" | grep "Class:" | awk '{print $2}')
-byte_order=$(readelf -h "$file_name" | grep "Data:" | awk -F, '{print $2}' | xargs)
-entry_point_address=$(readelf -h "$file_name" | grep "Entry point address:" | awk '{print $NF}')
+# is type: elf file
+if ! file "$1" | grep -q "ELF"; then
+	echo "not an elf file"
+	exit 1
+fi
 
+elf_magic=$(readelf -h "$1" | grep "Magic:" | awk '{$1=""; print $0}')
+elf_class=$(readelf -h "$1" | grep "Class:" | awk '{$1=""; print $0}')
+elf_byte_order=$(readelf -h "$1" | grep "Data:" | awk '{$1=""; print $0}')
+elf_entry_point=$(readelf -h "$1" | grep "Entry point address:" | awk '{$1=""; $2=""; $3=""; print $0}')
+
+arg1=$(echo "${elf_magic:1}")
+arg2=$(echo "${elf_class:1}")
+arg3=$(echo "${elf_byte_order:17}")
+arg4=$(echo "${elf_entry_point:3}")
+
+export file_name="$1"
+export magic_number="$arg1"
+export class="$arg2"
+export byte_order="$arg3"
+export entry_point_address="$arg4"
 display_elf_header_info
